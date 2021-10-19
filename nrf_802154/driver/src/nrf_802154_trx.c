@@ -50,6 +50,7 @@
 #include "nrf_802154_utils.h"
 
 #include "hal/nrf_egu.h"
+#include "hal/nrf_gpio.h"
 #include "hal/nrf_radio.h"
 #include "hal/nrf_timer.h"
 
@@ -470,6 +471,12 @@ void nrf_802154_trx_init(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
 
+// Set MODE pin to enable FEM working with default POUTB_PROD = 10 dBM
+#if DT_NODE_HAS_PROP(DT_NODELABEL(nrf_radio_fem), mode_gpios)
+    nrf_gpio_cfg_output(DT_GPIO_PIN(DT_NODELABEL(nrf_radio_fem), mode_gpios));
+    nrf_gpio_pin_set(DT_GPIO_PIN(DT_NODELABEL(nrf_radio_fem), mode_gpios));
+#endif
+
     nrf_802154_trx_module_reset();
 
     nrf_timer_init();
@@ -483,6 +490,11 @@ void nrf_802154_trx_init(void)
 void nrf_802154_trx_enable(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
+// Clear MODE pin to enable FEM working with default POUTA_PROD = 20 dBM
+#if DT_NODE_HAS_PROP(DT_NODELABEL(nrf_radio_fem), mode_gpios)
+    nrf_gpio_pin_clear(DT_GPIO_PIN(DT_NODELABEL(nrf_radio_fem), mode_gpios));
+#endif
 
     assert(m_trx_state == TRX_STATE_DISABLED);
 
@@ -619,6 +631,11 @@ static void fem_power_down_now(void)
 void nrf_802154_trx_disable(void)
 {
     nrf_802154_log_function_enter(NRF_802154_LOG_VERBOSITY_LOW);
+
+// Set MODE pin to enable FEM working with default POUTB_PROD = 10 dBM
+#if DT_NODE_HAS_PROP(DT_NODELABEL(nrf_radio_fem), mode_gpios)
+    nrf_gpio_pin_set(DT_GPIO_PIN(DT_NODELABEL(nrf_radio_fem), mode_gpios));
+#endif
 
     if (m_trx_state != TRX_STATE_DISABLED)
     {
